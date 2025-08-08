@@ -1,6 +1,5 @@
-colorama==0.4.6
 coloredlogs==15.0.1
-mido==1.3.4.dev6+ga0158ff
+mido==1.3.3
 mingus==0.6.1
-music21==9.7.1
-pygame==2.6.1
+music21==9.1.0
+pygame==2.1.3

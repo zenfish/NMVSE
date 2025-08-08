@@ -53,7 +53,8 @@ NMSVE           = "NMSVE "
 KNOB_TOLERANCE  = 10
 
 # SF2 file?
-SF2 = "/opt/homebrew/Cellar/fluid-synth/2.4.6/share/soundfonts/default.sf2"
+# SF2 = "/opt/homebrew/Cellar/fluid-synth/2.4.6/share/soundfonts/default.sf2"
+SF2 = "/opt/homebrew/Cellar/fluid-synth/2.4.6/share/fluid-synth/sf2/VintageDreamsWaves-v2.sf2"
 
 #
 # various keys in the scales
