@@ -25,7 +25,7 @@ from music21 import *
 
 # jump through various hoops
 environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
-environ["COLOREDLOGS_LOG_FORMAT"]     = '[%(asctime)s] %(levelname)s %(message)s'
+environ["COLOREDLOGS_LOG_FORMAT"]     = '[%(asctime)s] %(message)s'
 environ["COLOREDLOGS_DATE_FORMAT"]    = '%H:%M:%S'
 # 172 -> orange, 225 -> white, 190 -> yellow, etc.
 environ["COLOREDLOGS_LEVEL_STYLES"]   = 'info=144;warn=172;debug=32'
@@ -215,7 +215,7 @@ def list_all_scales():
             for p in example_scale.pitches:
                 note_name = str(p.name)
                 # Replace unicode flats/sharps with ASCII if needed
-                note_name = note_name.replace('♭', 'b').replace('♯', '#')
+                note_name = note_name.replace('♭', 'b').replace('♯', '#').replace('-','b')
                 notes.append(note_name)
 
             successful_scales.append((scale_name, notes))
@@ -256,8 +256,6 @@ def parse_fraction(fraction_str):
             return fractions.Fraction(1, 2)
 
 def setup_logging(log_level):
-
-    print(f"LL: {log_level}")
 
     # Map log level string to numeric value
     level_map = {
@@ -626,12 +624,38 @@ def start_sound(chan, note):
         # For chords, we need to transpose the root note before getting the chord
         if KEY_OFFSET != 0:
             # Get the transposed root note
+            logging.debug(f"before transpose -> {note_str}")
             transposed_note_str = transpose_note(note_str, KEY_OFFSET)
+            logging.debug(f"Transposed chord root from {note_str} to {transposed_note_str}")
             note_str            = transposed_note_str
             notez               = chords.from_shorthand(transposed_note_str)
-            logging.debug(f"Transposed chord root from {note_str} to {transposed_note_str}")
+
+            # -> Mapped key 48 to scale note 66
+            # -> Transposed chord root from F to F
+
+            print(f"KO: {KEY_OFFSET}")
+            # _n_ = note.Note(note_str)
+            # Access the .pitch.midi attribute to get the MIDI note number
+            # _m_n_ = n.pitch.midi
+
+            # print(
+
+            # midi_note_number = 60  # Middle C
+            # Create a Pitch object from the MIDI note number
+            # p = pitch.Pitch()
+            # p.midi = midi_note_number
+            # Get the note name with octave
+            # note_name = p.nameWithOctave
+
+
+
+
         else:
             notez = chords.from_shorthand(note_str)
+
+#       print(f"NS: {note_str}")
+#       note_str = note_str.replace('♭', 'b').replace('♯', '#').replace('-','b')
+#       print(f"NS: {note_str}")
 
         logging.warning(f"{note_str} {notez}")
 
@@ -1096,8 +1120,8 @@ def init_synth(SF2):
     # squelch some of those damn errors
     try:
         # dup and close the original
-#       copy_of_stderr = os.dup(2)
-#       os.close(2)
+        copy_of_stderr = os.dup(2)
+        os.close(2)
 
         # use fluidsynth for sounds, that troublesome child
         fluidsynth.init(SF2)
@@ -1135,8 +1159,8 @@ def init_synth(SF2):
 
     finally:
         # restore the old, kill off the copy
-#       os.dup2(copy_of_stderr, 2)
-#       os.close(copy_of_stderr)
+        os.dup2(copy_of_stderr, 2)
+        os.close(copy_of_stderr)
         pass
 
 def stop_midi():

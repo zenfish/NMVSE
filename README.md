@@ -20,7 +20,18 @@ Getting it running
 
 *** You need to have the NMVSE already connected prior to starting (if anyone knows a reasonable way to auto-connect, feel free to drop me a line.)
 
-Some options -
+A few fun things to try -
+
+```
+# cello arp... who doesn't love the cello?
+./noize.py  -p odd -i 42 -a
+
+# OK sax
+./noise.py -i 'Alto Sax' -n
+
+Etcetera.
+
+Has a bunch of options -
 
 ```bash
 usage: noize.py [-h] [-a] [-b ARP_BPM] [-c] [-r ARP_RATE] [-d {up,down,random}] [--arp-overlay] [--arp-latch] [-n] [-na ARP_PATTERN_N] [-p ARP_PATTERN] [-f SOUND_FONT_FILE] [-i INSTRUMENT] [-k KEY] [-l {3,2,1,0,errors-only,info,verbose,debug}] [-s SCALE] [--only-scale-permitted]
@@ -76,7 +87,7 @@ The default octave depends on where the slider on the NMVSE is (right is a highe
 So many options to beat with sticks
 =====
 
-Some of the big ones -
+More about the some of the more important options.
 
 ``-n/--notes`` will play single notes instead of a chord.
 
