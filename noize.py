@@ -41,6 +41,13 @@ from   mingus.core.notes  import reduce_accidentals
 from   mingus.core.chords import from_shorthand
 from   mingus.midi        import fluidsynth
 
+#
+# monkey madness time
+#
+import mingus.midi.pyfluidsynth as pyfluid
+from   mingus.midi.pyfluidsynth import fluid_settings_setnum, fluid_settings_setint, fluid_settings_setstr
+
+
 ### the NMSVE lil midi box
 
 # this is mine... presuming that the hex is something like the bluetooth address... but how many
@@ -54,7 +61,7 @@ KNOB_TOLERANCE  = 10
 
 # SF2 file?
 # SF2 = "/opt/homebrew/Cellar/fluid-synth/2.4.6/share/soundfonts/default.sf2"
-SF2 = "/opt/homebrew/Cellar/fluid-synth/2.4.6/share/fluid-synth/sf2/VintageDreamsWaves-v2.sf2"
+SF2 = "./GeneralUser-GS.sf2"
 
 #
 # various keys in the scales
@@ -1058,17 +1065,68 @@ def init_midi(instrument_int, instrument_str):
     midi_player = pygame.midi.Output(default)
     midi_player.set_instrument(instrument_int)
 
+#
+# monkeypatching mingus fluidsynth
+#
+
+# Add the setting method to the existing Synth class
+def setting(self, name, value):
+    """Set a FluidSynth setting."""
+    name_bytes = name.encode('utf-8') if isinstance(name, str) else name
+    
+    if isinstance(value, int):
+        return fluid_settings_setint(self.settings, name_bytes, value)
+    elif isinstance(value, float):
+        return fluid_settings_setnum(self.settings, name_bytes, value)
+    elif isinstance(value, str):
+        value_bytes = value.encode('utf-8')
+        return fluid_settings_setstr(self.settings, name_bytes, value_bytes)
+    else:
+        # Try as float first, then int
+        try:
+            return fluid_settings_setnum(self.settings, name_bytes, float(value))
+        except:
+            return fluid_settings_setint(self.settings, name_bytes, int(value))
+
+
+
 def init_synth(SF2):
     logging.info(f"initializing fluidsynth")
 
     # squelch some of those damn errors
     try:
         # dup and close the original
-        copy_of_stderr = os.dup(2)
-        os.close(2)
+#       copy_of_stderr = os.dup(2)
+#       os.close(2)
 
         # use fluidsynth for sounds, that troublesome child
         fluidsynth.init(SF2)
+
+        #
+        # Monkey patch the method onto the existing class
+        #
+        pyfluid.Synth.setting = setting
+
+        # the soft underbelly o' the synth
+        fs = pyfluid.Synth()
+
+        # settings are from GeneralUser-GS/documentation/README.html in the SF2 package
+
+        # secret settings... sssssecrets.... filthy secretz.....
+        fs.setting('synth.polyphony', 512)
+        fs.setting('synth.device-id', 16)
+        fs.setting('synth.gain', 0.5)
+        fs.setting('synth.reverb.damp', 0.3)
+        fs.setting('synth.reverb.level', 0.7)
+        fs.setting('synth.reverb.room-size', 0.5)
+        fs.setting('synth.reverb.width', 0.8)
+        fs.setting('synth.chorus.depth', 3.6)
+        fs.setting('synth.chorus.level', 0.55)
+        fs.setting('synth.chorus.nr', 4)
+        fs.setting('synth.chorus.speed', 0.36)
+
+        fs.start()
+
 
     except Exception as e:
         print(e)
@@ -1077,8 +1135,9 @@ def init_synth(SF2):
 
     finally:
         # restore the old, kill off the copy
-        os.dup2(copy_of_stderr, 2)
-        os.close(copy_of_stderr)
+#       os.dup2(copy_of_stderr, 2)
+#       os.close(copy_of_stderr)
+        pass
 
 def stop_midi():
     global midi_player

@@ -8,11 +8,11 @@ While it can be used with Logic Pro, Kontakt, etc., I thought I'd try my hand at
 
 Works on a M1 Mac running Sequoia/macOS 15.5 (24F74), but it should work on most modern macs/whatever... if it doesn't work on something, let me know!
 
-Requires python3 and some supporting libraries (``pip3 install -r requirements`` or w/e should get them installed.)
+- Requires python3 and some supporting libraries (``pip3 install -r requirements`` or w/e should get them installed.)
 
-It also requires fluidsynth - on Macs you can install this with ``brew reinstall fluid-synth`` (you can go [here](https://brew.sh/) if you don't have brew to install that, it's pretty painless.)
+- It also requires fluidsynth to play sounds - on Macs you can install this with ``brew reinstall fluid-synth`` (you can go [here](https://brew.sh/) if you don't have brew to install that, it's pretty painless.)
 
-Fluidsynth provides the sounds (piano, tuba, whatever) that correspond to the instrument #'s in the MIDI spec.
+- Finally, you need an sound font file (SF2 file)... I've included a fine one - GeneralUser GS 2.0.2 - by [S. Christian Collins](https://schristiancollins.com/generaluser.php). Handily, the instruments/sounds in the SF2 file (piano, tuba, whatever) correspond to the instrument #'s in the MIDI spec.
 
 
 Getting it running
@@ -23,32 +23,30 @@ Getting it running
 Some options -
 
 ```bash
-./noize.py  --help
-usage: noize.py [-h] [-a] [-b ARP_BPM] [-c] [-r ARP_RATE] [-d {up,down,random}] [--arp-overlay] [--arp-latch] [-n] [-na ARP_PATTERN_N] [-p ARP_PATTERN] [-f SOUND_FONT_FILE] [-i INSTRUMENT] [-k KEY]
-                [-l {3,2,1,0,errors-only,info,verbose,debug}] [-s SCALE] [--only-scale-permitted]
+usage: noize.py [-h] [-a] [-b ARP_BPM] [-c] [-r ARP_RATE] [-d {up,down,random}] [--arp-overlay] [--arp-latch] [-n] [-na ARP_PATTERN_N] [-p ARP_PATTERN] [-f SOUND_FONT_FILE] [-i INSTRUMENT] [-k KEY] [-l {3,2,1,0,errors-only,info,verbose,debug}] [-s SCALE] [--only-scale-permitted]
 
 options:
 
-  -h, --help            show this help message and exit
-  -c, --chords          Play chords
-  -f SOUND_FONT_FILE, --sound-font-file SOUND_FONT_FILE     give a full path to an alternate SF2 file
-  -i INSTRUMENT, --instrument INSTRUMENT - the instrument number or name to use
-  -k KEY, --key KEY     Key to play in (e.g., "C", "F#", "Bb"). Default is C
-  -l {3,2,1,0,errors-only,info,verbose,debug}, --log-level {3,2,1,0,errors-only,info,verbose,debug}    - Logging level (0/errors-only, 1/debug, 2/verbose, 3/info)
-  -n, --notes           Play notes instead of chords
-  -s SCALE, --scale SCALE   - scale to use (e.g., "C-D-E-F-G-A-B" or predefined scale name)
-  --only-scale-permitted    - only play/allow notes that are in the specified scale
+  -h/--help              show this help message and exit
+  -c/--chords            Play chords
+  -f/--sound-font-file   font.SF2   - a full path to an alternate SF2 file
+  -i/--instrument        INSTRUMENT - the instrument number or name to use. Default is 0/piano
+  -k/--key               KEY        - Key to play in (e.g., "C", "F#", "Bb"). Default is C
+  -n/--notes             Play notes instead of chords
+  -s/--scale SCALE       Scale to use (e.g., "C-D-E-F-G-A-B" or predefined scale name)
+  --only-scale-permitted - only play/allow notes that are in the specified scale
+  -l/--log-level        {errors-only,info,verbose,debug,10,20,30,40}
 
 # arp stuff
 
-  -a, --arp             Enable arpeggiation
-  -b ARP_BPM, --arp-bpm ARP_BPM       -  Beats per minute for arpeggiation (default: 120)
-  -r ARP_RATE, --arp-rate ARP_RATE    -  Rate of notes per beat as a fraction (e.g., "1/4", "1/8"). Default is 1/4.
-  -d {up,down,random}, --arp-direction {up,down,random}  - Direction of arpeggiation (default: up)
-  --arp-overlay         Continue playing arpeggio after key release, allowing multiple arps to overlap
-  --arp-latch           Stop previous arp sounds when starting a new sequence
-  -na ARP_PATTERN_N, --arp-pattern-n    ARP_PATTERN_N - Number of beats in arp pattern (default: 4)
-  -p ARP_PATTERN,    --arp-pattern      ARP_PATTERN - pattern for arpeggiation (e.g., "+3.+1...-1.+2+3" or "increment", "odd", "even")
+  -a/--arp                 Enable arpeggiation
+  -b/--arp-bpm ARP_BPM     Beats per minute for arpeggiation (default: 120)
+  -r/--arp-rate ARP_RATE   Rate of notes per beat as a fraction (e.g., "1/4", "1/8"). Default is 1/4.
+  -d/--arp-direction       {up,down,random}  - Direction of arpeggiation (default: up)
+  --arp-overlay            Continue playing arpeggio after key release, allowing multiple arps to overlap
+  --arp-latch              Stop previous arp sounds when starting a new sequence
+  -na/--arp-pattern-n ARP_PATTERN_N - Number of beats in arp pattern (default: 4)
+  -p/--arp-pattern ARP_PATTERN      - pattern for arpeggiation (e.g., "+3.+1...-1.+2+3" or "increment", "odd", "even")
 
 ```
 Just running it with no options will try to connect with the defaults (plays chords with piano-ish sounds.)
@@ -95,8 +93,9 @@ Lots of arpeggiator options... it runs in an event loop waiting for something to
 
 ``-r/--arp-rate`` sets the rate of notes per beat as a fraction (e.g., "1/4", "1/8"). Default is 1/4.
 
-``-i/--instrument`` sets the instrument from the
+``-i/--instrument`` sets the instrument from the SF2 file... here's the one I included -
 
+```
  0 Acoustic Grand Piano
  1 Bright Acoustic Piano
  2 Electric Grand Piano
@@ -225,4 +224,4 @@ Lots of arpeggiator options... it runs in an event loop waiting for something to
 125 Helicopter
 126 Applause
 127 Gunshot
-
+```
