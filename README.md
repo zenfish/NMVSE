@@ -1,5 +1,5 @@
 
-Interpret midi sounds coming from the NMVSE
+Interpret midi signals coming from the NMVSE
 ====
 
 I picked up the [NMVSE](https://thisisnoiseinc.com/products/nmsve-order), a cool lil' midi controller @ [Amazon](https://www.amazon.com/NMSVE-this-NOISE-inc-controller/dp/B0CXF6QNY2) the other day.
