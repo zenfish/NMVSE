@@ -62,6 +62,17 @@ options:
 ```
 Just running it with no options will try to connect with the defaults (plays chords with piano-ish sounds.)
 
+No Sound on Mac
+====
+
+I try to close shut down midi carefully, catching signals and doing the Right Thing.
+
+On a mac this should shut down and restart the sound, whether I'm responsible or not....
+
+```bash
+sudo kill -9 $(ps ax|awk '/coreaudio[a-z]/ {print $1}')
+```
+
 Controls -
 ====
 Here's a rough ASCII NMVSE of the thing -

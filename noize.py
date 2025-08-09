@@ -1073,7 +1073,11 @@ def instrument_string_search(arg):
 
 def signal_handler(sig, frame):
     logging.error("caught interrupt signal... shutting down....")
+
+    # at various times used pygame and mingus for midi
     stop_midi()
+    fluidsynth.stop_everything()
+
     sys.exit(0)
 
 def init_midi(instrument_int, instrument_str):
