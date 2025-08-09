@@ -93,7 +93,7 @@ Lots of arpeggiator options... it runs in an event loop waiting for something to
 
 ``-r/--arp-rate`` sets the rate of notes per beat as a fraction (e.g., "1/4", "1/8"). Default is 1/4.
 
-``-i/--instrument`` sets the instrument from the SF2 file... here's the one I included -
+``-i/--instrument`` sets the instrument from the SF2 file... here's the list from the MIDI spec -
 
 ```
  0 Acoustic Grand Piano
