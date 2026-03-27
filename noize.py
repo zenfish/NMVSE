@@ -693,10 +693,12 @@ def start_sound(chan, note):
 
             note_str, octave = number_to_note(transposed_note)
 
+            logging.warning(f"{note_str}")
             logging.debug(f"\t+++> [ch-{chan} / {note_str}-{octave}] ... (Transposed {orig_note})")
 
             fluidsynth.play_Note(transposed_note)
         else:
+            logging.warning(f"{note_str}")
             logging.debug(f"\t+++> [ch-{chan} / {note_str}-{octave}]")
             fluidsynth.play_Note(note)
 
