@@ -657,13 +657,9 @@ def _print_note_stop(chan, midi_note):
             return
 
         info = active_note_lines.pop(key)
-        lines_back = _display_line_counter - info['line_num']
-
-        if lines_back == 0:
-            # still on the same line (shouldn't happen, but just in case)
-            sys.stderr.write(f" -> stopped! [{ts}]\n")
-            sys.stderr.flush()
-            return
+        # cursor is always one row below the last content line (after the newline),
+        # so +1 to account for that
+        lines_back = _display_line_counter - info['line_num'] + 1
 
         suffix = f" -> stopped! [{ts}]"
 
