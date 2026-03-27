@@ -1259,8 +1259,8 @@ def parse_args():
     # Octave
     parser.add_argument('-o', '--octave',          type=int, default=4, choices=range(1, 9), metavar='N', help='Base octave (1-8, default: 4 = middle C)')
 
-    # New option for scale-restricted mode
-    parser.add_argument('--only-scale-permitted',  action='store_true', help='Only allow notes that are in the specified scale')
+    # Scale restriction option
+    parser.add_argument('--only-scale-permitted',  action='store_true', help='Only allow notes that are in the specified scale (implied by -s)')
     
     args = parser.parse_args()
     
@@ -1326,6 +1326,11 @@ if args.notes:
 # Setup scale
 if args.scale:
     setup_scale(args.scale, args.key)
+
+    # If a scale is set, enable scale restriction by default
+    if not ONLY_SCALE_PERMITTED and current_scale:
+        logging.info("Scale specified — enabling scale restriction automatically")
+        ONLY_SCALE_PERMITTED = True
     
     if ONLY_SCALE_PERMITTED:
         logging.info("Scale restriction enabled: Only notes in the scale will be played")
