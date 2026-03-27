@@ -93,6 +93,14 @@ NOTES_IN_OCTAVE = 12
 # until setup
 midi_player     = False
 
+# Track active notes for inline start/stop display
+# Maps (chan, midi_note) -> { 'line': int, 'label': str }
+# 'line' counts how many display lines ago this note was printed (1 = last line)
+active_note_lines = {}
+note_line_lock    = threading.Lock()
+# current output line counter (incremented each time we print a note-start line)
+_display_line_counter = 0
+
 # Arpeggiator state
 active_arps     = {}
 arp_lock        = threading.Lock()
@@ -258,6 +266,14 @@ def parse_fraction(fraction_str):
             logging.error(f"Invalid fraction format: {fraction_str}. Using default 1/4.")
             return fractions.Fraction(1, 2)
 
+class NoteLineTracker(logging.Handler):
+    """Tracks log output lines so ANSI cursor-up math stays correct"""
+    def emit(self, record):
+        global _display_line_counter
+        # each log message is one terminal line
+        with note_line_lock:
+            _display_line_counter += 1
+
 def setup_logging(log_level):
 
     # Map log level string to numeric value
@@ -275,9 +291,10 @@ def setup_logging(log_level):
     # gray for timestamp
     field_styles = { 'asctime': {'color': 'white'} }
 
-    # log_level    = level_map.get(log_level.lower(), logging.INFO)
-
     coloredlogs.install(level=level_map[log_level], field_styles=field_styles)
+
+    # attach line tracker so ANSI note-stop cursor math accounts for log output
+    logging.getLogger().addHandler(NoteLineTracker())
 
     logging.warning(f"setting up logging to: {level_map[log_level]}")
 
@@ -600,10 +617,68 @@ def map_midi_key_to_scale(midi_key):
     logging.debug(f"Mapped MIDI key {midi_key} to scale note {midi_note} (scale index {scale_index}, octave {octave})")
     return midi_note
 
+def _note_timestamp():
+    """Format a timestamp matching coloredlogs style"""
+    return time.strftime('%H:%M:%S')
+
+def _print_note_start(chan, midi_note, label):
+    """Print a note-start line and track it for inline stop updates"""
+    global _display_line_counter
+
+    ts = _note_timestamp()
+    line = f"[{ts}] {label} start"
+    sys.stderr.write(line)
+    sys.stderr.flush()
+
+    with note_line_lock:
+        _display_line_counter += 1
+        active_note_lines[(chan, midi_note)] = {
+            'line_num': _display_line_counter,
+            'label': label,
+            'line_len': len(line),
+        }
+        # write the newline after recording — cursor is now on the next line
+        sys.stderr.write('\n')
+        sys.stderr.flush()
+
+def _print_note_stop(chan, midi_note):
+    """Go back up to the start line for this note and append stop info"""
+    global _display_line_counter
+
+    ts = _note_timestamp()
+
+    with note_line_lock:
+        key = (chan, midi_note)
+        if key not in active_note_lines:
+            # fallback — just log normally if we lost track
+            sys.stderr.write(f"[{ts}] ? -> stopped!\n")
+            sys.stderr.flush()
+            _display_line_counter += 1
+            return
+
+        info = active_note_lines.pop(key)
+        lines_back = _display_line_counter - info['line_num']
+
+        if lines_back == 0:
+            # still on the same line (shouldn't happen, but just in case)
+            sys.stderr.write(f" -> stopped! [{ts}]\n")
+            sys.stderr.flush()
+            return
+
+        suffix = f" -> stopped! [{ts}]"
+
+        # move up N lines, go to end of that line, append, then move back down
+        sys.stderr.write(
+            f"\033[{lines_back}A"       # move cursor up
+            f"\033[{info['line_len']}C"  # move cursor right to end of existing text
+            f"{suffix}"                  # append stop info
+            f"\033[{lines_back}B"        # move cursor back down
+            f"\r"                        # carriage return to column 0
+        )
+        sys.stderr.flush()
+
 def start_sound(chan, note):
     global midi_player
-
-    logging.warning("starting note.... ")
     
     # If scale restriction is enabled, map the key to the scale sequentially
     if ONLY_SCALE_PERMITTED:
@@ -660,7 +735,7 @@ def start_sound(chan, note):
 #       note_str = note_str.replace('♭', 'b').replace('♯', '#').replace('-','b')
 #       print(f"NS: {note_str}")
 
-        logging.warning(f"{note_str} {notez}")
+        _print_note_start(chan, note, f"{note_str} {notez}")
 
         last_note = 0
 
@@ -693,12 +768,12 @@ def start_sound(chan, note):
 
             note_str, octave = number_to_note(transposed_note)
 
-            logging.warning(f"{note_str}")
+            _print_note_start(chan, note, note_str)
             logging.debug(f"\t+++> [ch-{chan} / {note_str}-{octave}] ... (Transposed {orig_note})")
 
             fluidsynth.play_Note(transposed_note)
         else:
-            logging.warning(f"{note_str}")
+            _print_note_start(chan, note, note_str)
             logging.debug(f"\t+++> [ch-{chan} / {note_str}-{octave}]")
             fluidsynth.play_Note(note)
 
@@ -995,8 +1070,6 @@ def stop_arp(channel, note):
 
 def stop_sound(chan, note):
     global midi_player
-
-    logging.warning("\tstop!")
     
     # If scale restriction is enabled, map the key to the scale sequentially
     if ONLY_SCALE_PERMITTED:
@@ -1005,6 +1078,8 @@ def stop_sound(chan, note):
         if original_note != note:
             logging.debug(f"Mapped key {original_note} to scale note {note} for stop")
     
+    _print_note_stop(chan, note)
+
     note_str, octave = number_to_note(note)
 
     logging.debug("\t<--- [channel: %s] %s/%s [midi-num: %s]" % (chan, note_str, octave, note))
