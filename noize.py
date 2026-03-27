@@ -82,6 +82,9 @@ ARP_LATCH       = False  # New option
 ARP_PATTERN_N   = 4
 ARP_PATTERN     = "+1.+2.+3.+4."
 
+# base octave (C4 = middle C on piano)
+BASE_OCTAVE     = 4
+
 # default velocity of none set
 MIDI_VELOCITY   = 127
 
@@ -583,10 +586,10 @@ def map_midi_key_to_scale(midi_key):
     # Get the pitch class for this scale index
     pitch_class = scale_notes_midi[scale_index]
     
-    # Calculate the octave
-    base_octave = 3  # Start at octave 3 (C3 = 36)
-    octave_offset = (midi_key - 36) // scale_length
-    octave = base_octave + octave_offset
+    # Calculate the octave using the configured base octave
+    base_midi = (BASE_OCTAVE - 1) * 12  # one octave below BASE_OCTAVE
+    octave_offset = (midi_key - base_midi) // scale_length
+    octave = (BASE_OCTAVE - 1) + octave_offset
     
     # Calculate the final MIDI note
     midi_note = (octave * 12) + pitch_class
@@ -1253,6 +1256,9 @@ def parse_args():
     parser.add_argument('-l', '--log-level',       type=str, default="info", choices=["10", "20", "30", "40", "errors-only", "info", "verbose", "debug"], help='Logging level (10/errors-only, 20/info, 30/verbose, 40/debug)')
     parser.add_argument('-s', '--scale',           type=str, help='Scale to use (e.g., "C-D-E-F-G-A-B" or predefined scale name)')
     
+    # Octave
+    parser.add_argument('-o', '--octave',          type=int, default=4, choices=range(1, 9), metavar='N', help='Base octave (1-8, default: 4 = middle C)')
+
     # New option for scale-restricted mode
     parser.add_argument('--only-scale-permitted',  action='store_true', help='Only allow notes that are in the specified scale')
     
@@ -1301,6 +1307,9 @@ ARP_PATTERN     = args.arp_pattern
 
 # Set scale restriction option
 ONLY_SCALE_PERMITTED = args.only_scale_permitted
+
+# Set base octave
+BASE_OCTAVE = args.octave
 
 # Set key transposition
 KEY_OFFSET = calculate_key_offset(args.key)
@@ -1384,6 +1393,7 @@ if ARP:
 else:
     logging.info("no mas arpy")
 
+logging.warning(f"Base octave: {BASE_OCTAVE} (C{BASE_OCTAVE} = MIDI {BASE_OCTAVE * 12})")
 logging.warning("galloping along with our polling... time to start interacting with NMVSE!")
 logging.info("Listening for input from %s" % NMSVE)
 
@@ -1399,8 +1409,10 @@ with mido.open_input(NMSVE) as incoming:
         # notes, chords, whatever
         if msg.type == "note_on":
 
-            msg.note = msg.note - 12
-            # print("MidiNote: %s" % msg.note)
+            # shift MIDI note so the device's middle range lands on BASE_OCTAVE
+            # NMVSE sends around octave 5 by default; -12 was the old hardcoded shift to octave 4
+            OCTAVE_OFFSET = (BASE_OCTAVE - 5) * NOTES_IN_OCTAVE
+            msg.note = max(0, min(127, msg.note + OCTAVE_OFFSET))
 
             note_str, octave = number_to_note(msg.note)
 
@@ -1412,7 +1424,8 @@ with mido.open_input(NMSVE) as incoming:
                 start_sound(msg.channel, msg.note)
 
         elif msg.type == "note_off":
-            msg.note = msg.note - 12
+            OCTAVE_OFFSET = (BASE_OCTAVE - 5) * NOTES_IN_OCTAVE
+            msg.note = max(0, min(127, msg.note + OCTAVE_OFFSET))
             stop_sound(msg.channel, msg.note)
 
         elif msg.type == "polytouch":

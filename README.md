@@ -34,7 +34,7 @@ Etcetera.
 Has a bunch of options -
 
 ```bash
-usage: noize.py [-h] [-a] [-b ARP_BPM] [-c] [-r ARP_RATE] [-d {up,down,random}] [--arp-overlay] [--arp-latch] [-n] [-na ARP_PATTERN_N] [-p ARP_PATTERN] [-f SOUND_FONT_FILE] [-i INSTRUMENT] [-k KEY] [-l {3,2,1,0,errors-only,info,verbose,debug}] [-s SCALE] [--only-scale-permitted]
+usage: noize.py [-h] [-a] [-b ARP_BPM] [-c] [-r ARP_RATE] [-d {up,down,random}] [--arp-overlay] [--arp-latch] [-n] [-na ARP_PATTERN_N] [-p ARP_PATTERN] [-f SOUND_FONT_FILE] [-i INSTRUMENT] [-k KEY] [-l {3,2,1,0,errors-only,info,verbose,debug}] [-o N] [-s SCALE] [--only-scale-permitted]
 
 options:
 
@@ -44,6 +44,7 @@ options:
   -i/--instrument        INSTRUMENT - the instrument number or name to use. Default is 0/piano
   -k/--key               KEY        - Key to play in (e.g., "C", "F#", "Bb"). Default is C
   -n/--notes             Play notes instead of chords
+  -o/--octave N          Base octave 1-8 (default: 4 = middle C on a piano)
   -s/--scale SCALE       Scale to use (e.g., "C-D-E-F-G-A-B" or predefined scale name)
   --only-scale-permitted - only play/allow notes that are in the specified scale
   -l/--log-level        {errors-only,info,verbose,debug,10,20,30,40}
@@ -101,6 +102,8 @@ So many options to beat with sticks
 More about the some of the more important options.
 
 ``-n/--notes`` will play single notes instead of a chord.
+
+``-o/--octave`` sets the base octave from 1 (deep rumble) to 8 (dog whistle territory). Default is 4, which is middle C on a piano. So ``-o 3`` drops everything an octave lower, ``-o 6`` pushes it two octaves higher, etc.
 
 ``-k/--key`` select whatever key you want.
 
